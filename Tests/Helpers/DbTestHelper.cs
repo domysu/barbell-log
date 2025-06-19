@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using razorJqueryProject.Data;
 using razorJqueryProject.Models;
 
@@ -7,40 +8,27 @@ using razorJqueryProject.Models;
 namespace razorJqueryProject.Tests.Helpers   {
 
 
-    public class DbTestHelper
+   public abstract class DbTestBase : IAsyncLifetime
+{
+    protected ApplicationDbContext Context { get; private set; }
+    private IDbContextTransaction _transaction;
+
+    public async Task InitializeAsync()
     {
-        private const string ConnectionString = @"Server=127.0.0.1,1433;Database=ExerciseDB_test;User Id=sa;Password=YourStrong!Pass123;Encrypt=False;TrustServerCertificate=True;";
+        Context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseSqlServer("Server=127.0.0.1,1433;Database=ExerciseDB_test;User Id=sa;Password=YourStrong!Pass123;Encrypt=False;TrustServerCertificate=True;")
+                .Options);
 
-        private static readonly object _lock = new();
-        private static bool _databaseInitialized;
-
-        public DbTestHelper()
-        {
-            lock (_lock)
-            {
-                if (!_databaseInitialized)
-                {
-                    using (var context = CreateContext())
-                    {
-                        context.Database.EnsureDeleted();
-                        context.Database.EnsureCreated();
-
-                        context.AddRange(
-                            new Exercise { Name = "Exercise1", Reps = 20, Sets = 3, Weight = 50.5f, Comment = "First exercise", Created_at = DateTime.Now },
-                            new Exercise { Name = "Exercise2", Reps = 20, Sets = 3, Weight = 50.5f, Comment = "First exercise", Created_at = DateTime.Now });
-                        context.SaveChanges();
-                    }
-
-                    _databaseInitialized = true;
-                }
-            }
-        }
-
-        public ApplicationDbContext CreateContext()
-            => new ApplicationDbContext(
-                new DbContextOptionsBuilder<ApplicationDbContext>()
-                    .UseSqlServer(ConnectionString)
-                    .Options);
+        _transaction = await Context.Database.BeginTransactionAsync();
     }
+
+    public async Task DisposeAsync()
+    {
+        await _transaction.RollbackAsync(); // nukes all changes after each test
+        await Context.DisposeAsync();
+    }
+}
+
     }
 

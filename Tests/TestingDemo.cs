@@ -1,53 +1,76 @@
-using Xunit;
-using razorJqueryProject.Tests.Helpers;
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using razorJqueryProject.Controllers;
 using razorJqueryProject.Models;
-using razorJqueryProject.Data;
-using Microsoft.EntityFrameworkCore.Storage;
+using razorJqueryProject.Tests.Helpers;
+using Xunit;
 
 namespace razorJqueryProject.Tests
 {
-    public class TestingDemo : IClassFixture<DbTestHelper>
+    public class ExerciseTests : DbTestBase
     {
-
-        private readonly ApplicationDbContext _context;
-        private readonly IDbContextTransaction _transaction;
-        public TestingDemo(DbTestHelper fixture)
+        [Fact]
+        public async Task Can_Create_Exercise_With_User()
         {
-            _context = fixture.CreateContext();
-            _transaction = _context.Database.BeginTransaction();
+            // Arrange
+            var user = new User
+            {
+                Username = "testuser",
+                Password = "password123"
+            };
 
+            Context.Users.Add(user);
+            await Context.SaveChangesAsync();
+
+            var exercise = new Exercise
+            {
+                Name = "Deadlift",
+                Reps = 5,
+                Sets = 4,
+                Weight = 150,
+                Comment = "Heavy set",
+                Created_at = DateTime.Now,
+                UserId = user.Id
+            };
+
+            // Act
+            Context.Exercise.Add(exercise);
+            await Context.SaveChangesAsync();
+
+            // Assert
+            Assert.NotEqual(0, exercise.Id);
+            Assert.Equal(user.Id, exercise.UserId);
         }
 
         [Fact]
-        public void Can_Create_Exercise()
+        public async Task Checks_If_User_Already_Exists()
         {
-            try
+            // Arrange
+            var user = new User
             {
-                var exercise = new Exercise
-                {
-                    Name = "test",
-                    Reps = 10,
-                    Sets = 3,
-                    Weight = 75,
-                    Comment = "This is a test exercise",
-                    Created_at = DateTime.Now
-                };
+                Username = "User",
+                Password = "Password"
 
-                _context.Exercise.Add(exercise);
-                _context.SaveChanges();
+            };
+            var registerViewModal = new Register
+            {
+                Username = "User",
+                Password = "Password",
+                ConfirmPassword = "Password",
+            };
+            Context.Users.Add(user);
+            await Context.SaveChangesAsync();
+            var controller = new AuthController(Context);
 
-                Assert.NotEqual(0, exercise.Id);
-            }
-            catch (Exception ex)
-            {
-                Assert.Fail($"Test failed with exception: {ex.Message}");
-            }
-            finally
-            {
-                _transaction.Rollback();
-            }
+            // Act
+            var result = await controller.Register(registerViewModal);
+
+            //Assert
+             var view = Assert.IsType<ViewResult>(result);
+             Assert.False(controller.ModelState.IsValid);
+            Assert.True(controller.ModelState.ContainsKey("Username"));
+
         }
-        
     }
 }

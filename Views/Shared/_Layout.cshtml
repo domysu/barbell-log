@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -28,7 +30,29 @@
                          <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Exercises" asp-action="Index">Exercises</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Auth" asp-action="Login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Auth" asp-action="Register">Register</a>
+                        </li>
                     </ul>
+
+                    <div class="navbar-nav flex-grow-1">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <span class="navbar-text text-dark">Hello, @User.Identity.Name!</span>
+                            <form asp-area="" asp-controller="Auth" asp-action="Logout" method="post" class="form-inline">
+                                <button type="submit" class="btn text-dark btn-danger">Logout</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="navbar-text text-dark">Welcome, Guest!</span>
+                        }
+
+
+                    </div>
                 </div>
             </div>
         </nav>

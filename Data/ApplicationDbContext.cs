@@ -19,5 +19,6 @@ namespace razorJqueryProject.Data
         }
 
         public DbSet<razorJqueryProject.Models.Exercise> Exercise { get; set; } = default!;
+        public DbSet<razorJqueryProject.Models.User> Users { get; set; } = default!;
     }
 }

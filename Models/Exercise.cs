@@ -10,6 +10,7 @@ namespace razorJqueryProject.Models
 
 
         private float _weight;
+        [Key]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; }
@@ -24,7 +25,13 @@ namespace razorJqueryProject.Models
         [Required]
         public int Reps { get; set; }
         public string? Comment { get; set; }
+        public int UserId { get; set; }
         public DateTime Created_at { get; set; }
 
+        public User User { get; set; } = default!; // Navigation property to User
+
     }
+
+   
+
 }
